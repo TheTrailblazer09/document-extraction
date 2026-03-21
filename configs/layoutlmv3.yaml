@@ -1,0 +1,36 @@
+# LayoutLMv3 fine-tuning configuration
+
+model:
+  name: "microsoft/layoutlmv3-base"
+  num_labels: null  # set dynamically from dataset
+  use_2d_position: true  # set to false for layout ablation experiment
+
+training:
+  epochs: 10
+  batch_size: 4
+  learning_rate: 5.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  max_grad_norm: 1.0
+  fp16: true
+
+data:
+  dataset: "cord"  # cord, funsd, or sroie
+  max_length: 512
+  image_size: [224, 224]
+
+evaluation:
+  metric: "seqeval"  # entity-level F1
+  eval_every_n_epochs: 1
+  save_best: true
+
+augmentation:
+  # Set to true for noise robustness experiment
+  enabled: false
+  rotation_range: 15
+  blur_limit: 5
+  quality_lower: 50
+
+logging:
+  wandb_project: "cs7643-doc-extraction"
+  wandb_run_name: null  # auto-generated if null

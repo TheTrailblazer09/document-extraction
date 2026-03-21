@@ -1,0 +1,59 @@
+services:
+  # GPU container (default for training)
+  gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+      - ./src:/workspace/src
+      - ./scripts:/workspace/scripts
+      - ./configs:/workspace/configs
+      - ./notebooks:/workspace/notebooks
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    shm_size: '8g'
+    stdin_open: true
+    tty: true
+
+  # CPU container (for data exploration, evaluation, writing code)
+  cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+      - ./src:/workspace/src
+      - ./scripts:/workspace/scripts
+      - ./configs:/workspace/configs
+      - ./notebooks:/workspace/notebooks
+    stdin_open: true
+    tty: true
+
+  # Jupyter notebook server
+  notebook:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./results:/workspace/results
+      - ./src:/workspace/src
+      - ./scripts:/workspace/scripts
+      - ./configs:/workspace/configs
+      - ./notebooks:/workspace/notebooks
+    ports:
+      - "8888:8888"
+    command: jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''
+    stdin_open: true
+    tty: true

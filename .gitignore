@@ -1,0 +1,52 @@
+# Datasets (too large for git)
+data/
+
+# Model checkpoints
+models/*.pt
+models/*.bin
+models/*.safetensors
+models/*/
+
+# Results (regenerable)
+results/*.json
+results/*.csv
+results/plots/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Environment
+.env
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_metadata
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Wandb
+wandb/
+
+# Kaggle credentials (NEVER commit this)
+kaggle.json
+
+# Docker
+.docker/

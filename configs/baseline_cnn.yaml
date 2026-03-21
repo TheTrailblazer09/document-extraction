@@ -1,0 +1,34 @@
+# OCR + CNN Baseline configuration
+
+model:
+  ocr_engine: "tesseract"
+  cnn_backbone: "resnet18"  # lightweight CNN for spatial feature extraction
+  hidden_dim: 256
+  num_labels: null  # set dynamically from dataset
+
+training:
+  epochs: 20
+  batch_size: 8
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  fp16: true
+
+data:
+  dataset: "cord"
+  max_words: 256  # max OCR tokens per document
+  image_size: [224, 224]
+
+evaluation:
+  metric: "seqeval"
+  eval_every_n_epochs: 2
+  save_best: true
+
+augmentation:
+  enabled: false
+  rotation_range: 15
+  blur_limit: 5
+  quality_lower: 50
+
+logging:
+  wandb_project: "cs7643-doc-extraction"
+  wandb_run_name: null
