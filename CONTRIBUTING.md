@@ -4,27 +4,27 @@
 
 We have 4 people and 3 models + shared infrastructure. Here's how to split it:
 
-### Person 1: LayoutLMv3 + Project Lead
+### Alisha: LayoutLMv3 + Project Lead
 - Own the LayoutLMv3 fine-tuning pipeline end to end
 - Write `src/models/layoutlmv3.py` and `src/training/train_layoutlmv3.py`
 - Run LayoutLMv3 experiments on CORD and FUNSD
 - Run the layout ablation experiment (disable 2D embeddings, compare)
 - Coordinate repo, make sure everyone can run things
 
-### Person 2: Donut
+### Bailey : Donut
 - Own the Donut fine-tuning pipeline end to end
 - Write `src/models/donut.py` and `src/training/train_donut.py`
 - Run Donut experiments on CORD and FUNSD
 - Handle the JSON parsing / tree edit distance evaluation specific to Donut
 
-### Person 3: OCR + CNN Baseline + Data Pipeline
+### David : OCR + CNN Baseline + Data Pipeline
 - Build the OCR + CNN baseline model
 - Write `src/models/baseline_cnn.py` and `src/training/train_baseline.py`
 - Own the shared data loading code (`src/data/`)
 - Handle Tesseract OCR preprocessing and bounding box extraction
 - Make sure all three models can load data the same way
 
-### Person 4: Evaluation + Noise Experiments + Report
+### Vani: Evaluation + Noise Experiments + Report
 - Own the shared evaluation code (`src/evaluation/`)
 - Implement noise augmentation pipeline (rotation, blur, resolution reduction)
 - Run the noise robustness experiment across all three models
