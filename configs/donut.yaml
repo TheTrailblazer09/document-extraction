@@ -16,7 +16,7 @@ training:
 
 data:
   dataset: "cord"  # cord, funsd, or sroie
-  image_size: [1280, 960]  # donut uses larger images
+  image_size: [720, 540]  # donut uses larger images
 
 evaluation:
   # Donut uses tree edit distance + F1 on parsed JSON
