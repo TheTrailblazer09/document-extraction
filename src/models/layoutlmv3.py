@@ -136,6 +136,7 @@ class LayoutLMv3ModelWrapper(nn.Module):
             num_labels=self.num_labels,
             id2label=id2label,
             label2id=label2id,
+            ignore_mismatched_sizes=True,
         )
 
     @property

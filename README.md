@@ -62,6 +62,12 @@ docker compose run --rm gpu python -m src.training.train --config configs/donut.
 
 # Run evaluation
 docker compose run --rm cpu python -m src.evaluation.evaluate --model layoutlmv3 --dataset cord --checkpoint models/layoutlmv3_cord_best.pt
+
+# Run shared Donut evaluation and save a normalized results JSON
+docker compose run --rm cpu python -m src.evaluation.evaluate --model donut --dataset cord --checkpoint models/donut_cord_best.pt --noise-setting clean
+
+# Aggregate normalized result JSONs into report tables
+docker compose run --rm cpu python scripts/analyze_results.py
 ```
 
 ### No GPU?
@@ -87,6 +93,7 @@ The CPU container works for everything except training. Use it for data explorat
 |   |-- 02_results_analysis.ipynb
 |   +-- 03_error_analysis.ipynb
 |-- results/                # Experiment logs, metrics, plots
+|-- docs/                   # Report scaffolding and shared writeup notes
 |-- scripts/                # Standalone scripts (download, preprocess, etc.)
 |   |-- download_data.py
 |   +-- verify_setup.py

@@ -22,7 +22,7 @@ Usage:
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 from PIL import Image
@@ -30,12 +30,13 @@ from torch.utils.data import Dataset
 
 try:
     import albumentations as A
-    from albumentations.pytorch import ToTensorV2
-    import numpy as np
 
     ALBUMENTATIONS_AVAILABLE = True
-except ImportError:
+    ALBUMENTATIONS_IMPORT_ERROR = None
+except Exception as exc:
+    A = None
     ALBUMENTATIONS_AVAILABLE = False
+    ALBUMENTATIONS_IMPORT_ERROR = exc
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -57,6 +58,7 @@ class DonutDataset(Dataset):
             max_length: int = 768,
             task_prompt: str = "<s_cord-v2>",
             augmentation_config: Optional[dict] = None,
+            image_transform: Optional[Callable[[Image.Image], Image.Image]] = None,
     ):
         self.dataset_name = dataset_name
         self.split = split
@@ -64,6 +66,7 @@ class DonutDataset(Dataset):
         self.max_length = max_length
         self.task_prompt = task_prompt
         self.task_end_token = f"</{task_prompt[1:]}"
+        self.image_transform = image_transform
 
         # Load the HuggingFace dataset from disk
         self.data = self._load_dataset(dataset_name, split)
@@ -74,7 +77,8 @@ class DonutDataset(Dataset):
             if not ALBUMENTATIONS_AVAILABLE:
                 print(
                     "WARNING: albumentations not installed, "
-                    "skipping augmentation"
+                    "or failed to import; skipping augmentation. "
+                    f"Import error: {ALBUMENTATIONS_IMPORT_ERROR}"
                 )
             else:
                 self.augment = A.Compose(
@@ -103,6 +107,9 @@ class DonutDataset(Dataset):
 
     def _load_dataset(self, dataset_name: str, split: str):
         """Load dataset from disk (saved by download_data.py)."""
+        if dataset_name == "sroie":
+            return self._load_sroie_split(split)
+
         from datasets import load_from_disk
 
         dataset_path = DATA_DIR / dataset_name / "hf_dataset"
@@ -134,6 +141,49 @@ class DonutDataset(Dataset):
                 f"Available: {list(full_dataset.keys())}"
             )
 
+    def _load_sroie_split(self, split: str) -> list[dict]:
+        """
+        Load SROIE from the repo's raw directory structure.
+
+        SROIE is stored as:
+        data/sroie/{train,test}/img
+        data/sroie/{train,test}/entities
+        """
+        normalized_split = "test" if split in {"val", "validation", "test"} else "train"
+        split_dir = DATA_DIR / "sroie" / normalized_split
+        img_dir = split_dir / "img"
+        entities_dir = split_dir / "entities"
+
+        if not img_dir.exists() or not entities_dir.exists():
+            raise FileNotFoundError(
+                f"SROIE split not found at {split_dir}. "
+                "Expected img/ and entities/ subdirectories."
+            )
+
+        records = []
+        for img_file in sorted(img_dir.glob("*.jpg")):
+            entity_path = entities_dir / f"{img_file.stem}.txt"
+            if not entity_path.exists():
+                continue
+
+            with open(entity_path, "r", encoding="latin-1") as handle:
+                entities = json.load(handle)
+
+            records.append(
+                {
+                    "image": Image.open(img_file).convert("RGB"),
+                    "company": entities.get("company", ""),
+                    "date": entities.get("date", ""),
+                    "address": entities.get("address", ""),
+                    "total": entities.get("total", ""),
+                }
+            )
+
+        if not records:
+            raise ValueError(f"No SROIE samples found in {split_dir}")
+
+        return records
+
     def __len__(self) -> int:
         return len(self.data)
 
@@ -150,6 +200,9 @@ class DonutDataset(Dataset):
             image_np = np.array(image)
             augmented = self.augment(image=image_np)
             image = Image.fromarray(augmented["image"])
+
+        if self.image_transform is not None:
+            image = self.image_transform(image)
 
         # Get ground truth as token sequence
         gt_json = self._get_ground_truth(sample)
