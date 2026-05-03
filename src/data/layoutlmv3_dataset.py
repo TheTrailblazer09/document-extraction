@@ -57,14 +57,15 @@ class LayoutLMv3Dataset(Dataset):
     """
 
     def __init__(
-            self,
-            dataset_name: str,
-            split: str,
-            processor,
-            label2id: dict[str, int],
-            max_length: int = 512,
-            augmentation_config: Optional[dict] = None,
-    ):
+        self,
+        dataset_name: str,
+        split: str,
+        processor,
+        label2id: dict[str, int],
+        max_length: int = 512,
+        augmentation_config: Optional[dict] = None,
+        image_transform=None,
+):
         self.dataset_name = dataset_name
         self.split = split
         self.processor = processor
@@ -72,6 +73,7 @@ class LayoutLMv3Dataset(Dataset):
         self.max_length = max_length
 
         self.data = self._load_dataset(dataset_name, split)
+        self.image_transform = image_transform
 
         self.augment = None
         if augmentation_config and augmentation_config.get("enabled", False):
@@ -131,6 +133,8 @@ class LayoutLMv3Dataset(Dataset):
         sample = self.data[idx]
         image = self._get_image(sample)
         words, boxes, word_labels = self._get_words_boxes_labels(sample, image)
+        if self.image_transform is not None:
+            image = self.image_transform(image)
 
         if self.augment is not None:
             image_np = np.array(image)

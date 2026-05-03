@@ -67,14 +67,19 @@ def run_ocr(image):
     )
     words, boxes, confs = [], [], []
     for i, w in enumerate(data["text"]):
-        if w.strip() and int(data["conf"][i]) > 50:
+        try:
+            conf = float(data["conf"][i])
+        except (TypeError, ValueError):
+            conf = -1.0
+
+        if w.strip() and conf > 50:
             x, y, w_, h_ = (
                 data["left"][i], data["top"][i],
                 data["width"][i], data["height"][i],
             )
             words.append(w)
             boxes.append([x, y, x + w_, y + h_])
-            confs.append(int(data["conf"][i]))
+            confs.append(conf)
     return words, boxes, confs
 
 def normalize_boxes(boxes, width, height):

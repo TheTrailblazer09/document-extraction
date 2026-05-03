@@ -31,6 +31,7 @@ Usage:
 
 import json
 import os
+from unittest import result
 
 import torch
 import torch.nn as nn
@@ -143,6 +144,7 @@ class BaselineCNNWrapper(nn.Module):
             else:
                 labels = [0] * len(words)
 
+            result["labels"] = labels
             result["label_grid"] = build_label_grid(norm_boxes, labels, H, W)
 
         return result

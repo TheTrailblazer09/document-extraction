@@ -1,7 +1,11 @@
 import json
 from pathlib import Path
+from contextlib import contextmanager
 from PIL import Image
 from datasets import load_from_disk
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DATA_DIR = REPO_ROOT / "data"
 
 
 class DocumentDataset:
@@ -9,7 +13,7 @@ class DocumentDataset:
 
     def __init__(self, dataset_name, data_dir="data"):
         self.dataset_name = dataset_name.lower()
-        self.data_dir = Path(data_dir)
+        self.data_dir = self._resolve_data_dir(data_dir)
         self.train = []
         self.val = []
         self.test = []
@@ -18,6 +22,19 @@ class DocumentDataset:
         if self.dataset_name not in loaders:
             raise ValueError(f"Please refactor data_loading.py to work with this new dataset: {dataset_name}")
         loaders[self.dataset_name]()
+
+    def _resolve_data_dir(self, data_dir):
+        path = Path(data_dir).expanduser()
+        if path.is_absolute():
+            return path
+        if path.exists():
+            return path.resolve()
+
+        repo_relative = (REPO_ROOT / path).resolve()
+        if repo_relative.exists():
+            return repo_relative
+
+        return repo_relative
 
     """
     CORD - HF
@@ -73,7 +90,7 @@ class DocumentDataset:
     entities/  *.txt  — JSON  {company, date, address, total}
     """
     def _load_sroie(self):
-        sroie_path = self.data_dir / "sroie" / "hf_dataset"
+        sroie_path = self.data_dir / "sroie"
         if not sroie_path.exists():
             raise FileNotFoundError(f"SROIE dataset not found at {sroie_path}")
 
@@ -109,7 +126,60 @@ class DocumentDataset:
         path = self.data_dir / name / "hf_dataset"
         if not path.exists():
             raise FileNotFoundError(f"{name.upper()} dataset not found at {path}")
-        return load_from_disk(str(path))
+        try:
+            return load_from_disk(str(path))
+        except TypeError as exc:
+            if "dataclass type or instance" not in str(exc):
+                raise
+            self._rewrite_legacy_list_features(path)
+            with self._legacy_list_compat():
+                return load_from_disk(str(path))
+
+    def _rewrite_legacy_list_features(self, dataset_path):
+        updated = False
+        for info_path in dataset_path.glob("*/dataset_info.json"):
+            data = json.loads(info_path.read_text(encoding="utf-8"))
+            rewritten, changed = self._replace_legacy_list_types(data)
+            if changed:
+                info_path.write_text(json.dumps(rewritten, indent=2) + "\n", encoding="utf-8")
+                updated = True
+        return updated
+
+    def _replace_legacy_list_types(self, obj):
+        changed = False
+
+        if isinstance(obj, dict):
+            rewritten = {}
+            for key, value in obj.items():
+                if key == "_type" and value == "List":
+                    rewritten[key] = "Sequence"
+                    changed = True
+                else:
+                    rewritten_value, child_changed = self._replace_legacy_list_types(value)
+                    rewritten[key] = rewritten_value
+                    changed = changed or child_changed
+            return rewritten, changed
+
+        if isinstance(obj, list):
+            rewritten = []
+            for value in obj:
+                rewritten_value, child_changed = self._replace_legacy_list_types(value)
+                rewritten.append(rewritten_value)
+                changed = changed or child_changed
+            return rewritten, changed
+
+        return obj, False
+
+    @contextmanager
+    def _legacy_list_compat(self):
+        from datasets.features import features as dataset_features
+
+        original_list = getattr(dataset_features, "List", None)
+        dataset_features.List = dataset_features.Sequence
+        try:
+            yield
+        finally:
+            dataset_features.List = original_list
 
 
 def load_dataset(dataset_name, data_dir="data"):
