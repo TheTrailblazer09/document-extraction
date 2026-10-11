@@ -6,6 +6,7 @@ Usage:
 """
 
 import sys
+from importlib import metadata
 from pathlib import Path
 
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -27,6 +28,13 @@ def check_package(name, import_name=None):
         return True
     except ImportError:
         print(f"  [FAIL] {name} not installed")
+        return False
+    except Exception as exc:
+        try:
+            installed_version = metadata.version(name)
+        except metadata.PackageNotFoundError:
+            installed_version = "installed"
+        print(f"  [FAIL] {name} ({installed_version}) import error: {exc}")
         return False
 
 
@@ -64,6 +72,7 @@ def main():
     packages = [
         ("torch", "torch"),
         ("transformers", "transformers"),
+        ("huggingface-hub", "huggingface_hub"),
         ("datasets", "datasets"),
         ("wandb", "wandb"),
         ("pytesseract", "pytesseract"),
@@ -73,7 +82,8 @@ def main():
         ("cv2", "cv2"),
         ("yaml", "yaml"),
     ]
-    all_packages_ok = all(check_package(n, i) for n, i in packages)
+    package_results = [check_package(n, i) for n, i in packages]
+    all_packages_ok = all(package_results)
 
     print("\nGPU:")
     check_gpu()
