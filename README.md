@@ -1,13 +1,5 @@
 # Comparing Layout-Aware Transformers for Document Information Extraction
 
-CS 7643 Deep Learning -- Spring 2026 -- Georgia Tech OMSCS
-
-## Team
-- [Bailey Seyller]
-- []
-- []
-- []
-
 ## Project Overview
 Comparing LayoutLMv3, Donut, and an OCR+CNN baseline for structured information extraction from financial document images. Evaluated on CORD, FUNSD, and SROIE datasets.
 
