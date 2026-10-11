@@ -102,15 +102,14 @@ The CPU container works for everything except training. Use it for data explorat
 
 ## Experiments
 
-| # | Experiment | Owner | Status |
-|---|-----------|-------|--------|
-| 1 | LayoutLMv3 fine-tuning (CORD + FUNSD) | | TODO |
-| 2 | Donut fine-tuning (CORD + FUNSD) | | TODO |
-| 3 | OCR + CNN baseline | | TODO |
-| 4 | Layout ablation (remove 2D embeddings) | | TODO |
-| 5 | Noise robustness testing | | TODO |
-| 6 | Cross-domain transfer (stretch) | | TODO |
-| 7 | Pretrained vs scratch (stretch) | | TODO |
+| # | Experiment 
+|---|-----------
+| 1 | LayoutLMv3 fine-tuning (CORD + FUNSD)  
+| 2 | Donut fine-tuning (CORD + FUNSD) 
+| 3 | OCR + CNN baseline 
+| 4 | Layout ablation (remove 2D embeddings) 
+| 5 | Noise robustness testing 
+
 
 ## Results
 Results and analysis will be documented in `results/` and in the final report.
